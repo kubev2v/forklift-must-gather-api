@@ -1,4 +1,4 @@
-module github.com/aufi/must-gather-rest-wrapper
+module github.com/konveyor/forklift-must-gather-api
 
 go 1.16
 

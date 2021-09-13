@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aufi/must-gather-rest-wrapper/pkg/backend"
 	"github.com/gin-gonic/gin"
+	"github.com/konveyor/forklift-must-gather-api/pkg/backend"
 	"gorm.io/gorm"
 )
 
@@ -29,7 +29,7 @@ func setupRouter() *gin.Engine {
 	r = gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
-		c.String(200, "must-gather-rest-wrapper - for API see https://github.com/aufi/must-gather-rest-wrapper/tree/main/doc")
+		c.String(200, "must-gather-rest-wrapper - for API see https://github.com/konveyor/forklift-must-gather-api#README")
 	})
 
 	r.POST("/must-gather", triggerGathering)

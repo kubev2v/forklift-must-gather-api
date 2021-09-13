@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aufi/must-gather-rest-wrapper/pkg/backend"
 	"github.com/gin-gonic/gin"
+	"github.com/konveyor/forklift-must-gather-api/pkg/backend"
 )
 
 var router *gin.Engine

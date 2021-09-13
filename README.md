@@ -1,8 +1,6 @@
-# Must-gather REST wrapper
+# Forklift must-gather API service
 
-The wraper should provide HTTP API to allow trigger OpenShift must-gather (full or targeted) and provide output archive again via HTTP.
-
-Under initial development, if this will work well, it could be moved under Forklift organization.
+This repo provides HTTP API to allow trigger OpenShift must-gather (full or targeted) and provide output archive again via HTTP.
 
 ## Usage
 
@@ -11,9 +9,9 @@ This is an early development version, steps below might change.
 ### Get it and run
 
 ```
-$ go get github.com/aufi/must-gather-rest-wrapper
-$ cd ~/go/src/github.com/aufi/must-gather-rest-wrapper
-$ go run pkg/must-gather-rest-wrapper.go # Note, run oc login first to allow wrapper use your KUBECONFIG or set environment variables to adjust config options
+$ go get github.com/konveyor/forklift-must-gather-api
+$ cd ~/go/src/github.com/konveyor/forklift-must-gather-api
+$ go run pkg/must-gather-api.go # Note, run oc login first to allow wrapper use your KUBECONFIG or set environment variables to adjust config options
 ```
 
 ### API examples
