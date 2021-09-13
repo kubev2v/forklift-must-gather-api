@@ -1,8 +1,6 @@
-# Must-gather REST wrapper
+# Forklift must-gather API service
 
-The wraper should provide HTTP API to allow trigger OpenShift must-gather (full or targeted) and provide output archive again via HTTP.
-
-Under initial development, if this will work well, it could be moved under Forklift organization.
+This repo provides HTTP API to allow trigger OpenShift must-gather (full or targeted) and provide output archive again via HTTP.
 
 ## Usage
 
@@ -11,9 +9,9 @@ This is an early development version, steps below might change.
 ### Get it and run
 
 ```
-$ go get github.com/aufi/must-gather-rest-wrapper
-$ cd ~/go/src/github.com/aufi/must-gather-rest-wrapper
-$ go run pkg/must-gather-rest-wrapper.go # Note, run oc login first to allow wrapper use your KUBECONFIG or set environment variables to adjust config options
+$ go get github.com/konveyor/forklift-must-gather-api
+$ cd ~/go/src/github.com/konveyor/forklift-must-gather-api
+$ go run pkg/must-gather-api.go # Note, run oc login first to allow wrapper use your KUBECONFIG or set environment variables to adjust config options
 ```
 
 ### API examples
@@ -21,25 +19,25 @@ $ go run pkg/must-gather-rest-wrapper.go # Note, run oc login first to allow wra
 Start must-gather execution
 
 ```
-$ curl -X POST -H "Content-Type: application/json" -d '{"image": "quay.io/konveyor/forklift-must-gather", "timeout": "15m"}' http://localhost:8080/must-gather
+$ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"image": "quay.io/konveyor/forklift-must-gather", "timeout": "15m"}' http://localhost:8080/must-gather
 ```
 
 Get must-gather execution (status field values: new, inprogress, completed, error)
 
 ```
-$ curl  http://localhost:8080/must-gather/15
+$ curl -H "Authorization: Bearer <TOKEN>" http://localhost:8080/must-gather/15
 ```
 
 Download must-gather archive (available only if must-gather execution status == "completed")
 
 ```
-$ curl -OJ http://localhost:8080/must-gather/15/data
+$ curl -H "Authorization: Bearer <TOKEN>" -OJ http://localhost:8080/must-gather/15/data
 ```
 
 List all must-gather executions
 
 ```
-$ curl  http://localhost:8080/must-gather
+$ curl -H "Authorization: Bearer <TOKEN>" http://localhost:8080/must-gather
 ```
 
 Example of must-gather JSON object returned by API
@@ -78,6 +76,12 @@ server | k8s API server which should be used | (taken from KUBECONFIG by default
 custom-name | custom ID to query the must-gather execution without remembering its ID | ```forklift-plan1```
 
 All params are optional. Empty POST request will run must-gather with default options configured on server side (see below).
+
+### Authentication
+
+It is required to pass a Bearer token in Authorization HTTP header, e.g. ```Authorization: Bearer sha256~ML7q_m_kjOzfk...```).
+
+The token can be printed in command line by ```$ oc whoami -t``` command or captured from HTTP headers in OpenShift web UI requests.
 
 ## Configuration
 

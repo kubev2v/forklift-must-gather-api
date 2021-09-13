@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/maufart/must-gather-rest-wrapper:latest
+IMG ?= quay.io/konveyor/forklift-must-gather-api:latest
 GOOS ?= `go env GOOS`
 GOBIN ?= ${GOPATH}/bin
 GO111MODULE = auto
@@ -14,7 +14,7 @@ test: fmt vet
 
 # Build manager binary
 manager: fmt vet
-	go build -o bin/app github.com/aufi/must-gather-rest-wrapper/pkg/must-gather-rest-wrapper
+	go build -o bin/app github.com/konveyor/forklift-must-gather-api/pkg/must-gather-api
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: fmt vet
