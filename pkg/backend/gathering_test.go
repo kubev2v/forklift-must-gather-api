@@ -18,7 +18,7 @@ func TestMustGatherExec(t *testing.T) {
 
 	// Ensure empty destinationDir and mock command exec
 	os.RemoveAll("/tmp/must-gather-result-1")
-	cmdExecCombinedOutput = cmdMockCombinedOutput
+	//cmdExecCombinedOutput = cmdMockCombinedOutput
 
 	// Exec the gathering
 	MustGatherExec(&gathering, db, "must-gather.tar.gz")
