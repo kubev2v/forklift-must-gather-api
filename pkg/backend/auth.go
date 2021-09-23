@@ -68,7 +68,7 @@ func (r *Auth) Permit(ctx *gin.Context) {
 	}
 	if allowed {
 		r.cache[key] = time.Now()
-		log.Printf("Authorization check - allowed: %v", allowed)
+		log.Printf("Authorization check - allowed")
 		return
 	} else {
 		status = http.StatusForbidden
@@ -101,18 +101,17 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 
 	w, err := r.writer(&cfg)
 	if err != nil {
-		log.Printf("wr: %v", w)
+		log.Printf("Cluster API writer error: %v", w)
 		log.Println(err)
 		return
 	}
 	err = w.Create(context.TODO(), tr)
 	if err != nil {
-		log.Printf("w tr create: %v", tr)
 		log.Println(err)
 		return
 	}
 	if !tr.Status.Authenticated {
-		log.Printf("token unauth: %v", tr.Status)
+		log.Printf("Failed token auth: %v", tr.Status)
 		return
 	}
 	user := tr.Status.User
