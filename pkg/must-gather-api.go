@@ -3,8 +3,11 @@ package main
 import (
 	"log"
 	"os"
+	"regexp"
 	"strings"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/konveyor/forklift-must-gather-api/pkg/backend"
 	"gorm.io/gorm"
@@ -12,6 +15,7 @@ import (
 
 var r *gin.Engine
 var db *gorm.DB
+var corsAllowedOrigins []*regexp.Regexp
 
 func main() {
 	db = backend.ConnectDB(configEnvOrDefault("DB_PATH", "gatherings.db"))
@@ -19,13 +23,19 @@ func main() {
 	// Periodical deletion of old records&archives on background
 	go backend.PeriodicalCleanup(configEnvOrDefault("CLEANUP_MAX_AGE", "-1"), db, false)
 
-	// Start HTTP service
+	// Prepare gin-gonic webserver with routes and middleware
 	r := setupRouter()
-	r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080
+
+	// Start HTTP/HTTPS service
+	if configEnvOrDefault("API_TLS_ENABLED", "") == "true" {
+		r.RunTLS(configEnvOrDefault("PORT", "8443"), configEnvOrDefault("API_TLS_CERTIFICATE", ""), configEnvOrDefault("API_TLS_KEY", ""))
+	} else {
+		r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080
+	}
 }
 
 func setupRouter() *gin.Engine {
-	// Gin routes setup
+	// Gin setup
 	r = gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
@@ -35,6 +45,16 @@ func setupRouter() *gin.Engine {
 	// Setup middleware to validate bearer auth tokens against the cluster
 	r.Use(backend.DefaultAuth.Permit)
 
+	// Prepare CORS
+	r.Use(cors.New(cors.Config{
+		AllowMethods:     []string{"GET"},
+		AllowHeaders:     []string{"Authorization", "Origin"},
+		AllowOriginFunc:  corsAllow,
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
+	// Setup routes for must-gather functions
 	r.POST("/must-gather", triggerGathering)
 	r.GET("/must-gather", listGatherings) // good at least during development and testing, real user should know gathering ID
 	r.GET("/must-gather/:id", getGathering)
@@ -107,3 +127,25 @@ func configEnvOrDefault(name, defaultValue string) string {
 		return defaultValue
 	}
 }
+
+// CORS functions
+func corsAllow(origin string) bool {
+	for _, expr := range corsAllowedOrigins {
+		if expr.MatchString(origin) {
+			return true
+		}
+	}
+
+	return false
+}
+
+//func corsBuildOrigins() {
+//	corsAllowedOrigins = []*regexp.Regexp{}
+//	for _, r := range configEnvOrDefault("CORS_ALLOWED_ORIGINS", "") {
+//		expr, err := regexp.Compile(r)
+//		if err != nil {
+//			continue
+//		}
+//		corsAllowedOrigins = append(corsAllowedOrigins, expr)
+//	}
+//}
