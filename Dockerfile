@@ -1,10 +1,12 @@
 # Builder image
-FROM registry.access.redhat.com/ubi8/go-toolset:1.14.12 as builder
+FROM registry.access.redhat.com/ubi8/go-toolset:1.15.14 as builder
 ENV GOPATH=$APP_ROOT
 RUN env
 COPY . .
 RUN go build -o app github.com/konveyor/forklift-must-gather-api/pkg
 
+# OpenShift CLI image (oc)
+FROM registry.redhat.io/openshift4/ose-cli:latest as ocimage
 
 # Runner image
 FROM registry.access.redhat.com/ubi8-minimal
@@ -25,6 +27,6 @@ LABEL name="konveyor/forklift-must-gather-api" \
 
 COPY --from=builder /opt/app-root/src/app /usr/bin/must-gather-api
 
-# RUN microdnf -y install tar && microdnf clean all
+COPY --from=ocimage /usr/bin/oc /usr/bin/oc
 
 ENTRYPOINT ["/usr/bin/must-gather-api"]
