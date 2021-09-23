@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: forklift-must-gather-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: forklift-must-gather-api
+  template:
+    metadata:
+      labels:
+        app: forklift-must-gather-api
+    spec:
+      containers:
+      - name: forklift-must-gather-api-backend
+        image: quay.io/maufart/forklift-must-gather-api:latest
+        env:
+        - name: DB_PATH
+          value: file::memory:?cache=shared
+        ports:
+        - containerPort: 8080
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: forklift-must-gather-api-svc
+  labels:
+    app: forklift-must-gather-api
+    service: forklift-must-gather-api-svc
+spec:
+  ports:
+    - name: port-8080
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: forklift-must-gather-api
+    service: forklift-must-gather-api-svc
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: forklift-must-gather-api
+  labels:
+    app: forklift-must-gather-api
+#    control-plane: controller-manager
+    service: forklift-must-gather-api-svc
+spec:
+  host: forklift-must-gather-api.apps-crc.testing
+  to:
+    kind: Service
+    name: forklift-must-gather-api-svc
+    weight: 100
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

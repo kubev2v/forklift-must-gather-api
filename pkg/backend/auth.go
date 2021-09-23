@@ -1,0 +1,199 @@
+package backend
+
+import (
+	"context"
+	"log"
+	"net/http"
+	"path"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	auth "k8s.io/api/authentication/v1"
+	auth2 "k8s.io/api/authorization/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/kubectl/pkg/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+//
+// Default auth provider.
+var DefaultAuth = Auth{
+	TTL: time.Second * 10,
+}
+
+//
+// Authorized by k8s bearer token SAR.
+// Token must have "*" on the cluster, like cluster-admin
+type Auth struct {
+	// k8s API writer.
+	Writer client.Writer
+	// Cached token TTL.
+	TTL time.Duration
+	// Mutex.
+	mutex sync.Mutex
+	// Token cache.
+	cache map[string]time.Time
+}
+
+//
+// Authenticate token.
+func (r *Auth) Permit(ctx *gin.Context) {
+	p := "must-gather"
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+	status := http.StatusOK
+	if r.cache == nil {
+		r.cache = make(map[string]time.Time)
+	}
+	r.prune()
+	token := r.token(ctx)
+	if token == "" {
+		log.Println("Authorization check - missing bearer token.")
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	key := r.key(token, p)
+	if t, found := r.cache[key]; found {
+		if time.Since(t) <= r.TTL {
+			return
+		}
+	}
+	allowed, err := r.permitClusterAdmin(token)
+	if err != nil {
+		log.Println(err, "Authorization check - token auth failed.")
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	if allowed {
+		r.cache[key] = time.Now()
+		log.Printf("Authorization check - allowed: %v", allowed)
+		return
+	} else {
+		status = http.StatusForbidden
+		delete(r.cache, token)
+		log.Println(
+			http.StatusText(status),
+			"token",
+			token)
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+}
+
+//
+// Authenticate token for a custer admin which is required by oc adm must-gather
+func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
+	tr := &auth.TokenReview{
+		Spec: auth.TokenReviewSpec{
+			Token: token,
+		},
+	}
+
+	var cfg rest.Config
+	// K8s sets env variables to determine connection details (like KUBERNETES_PORT)
+	// for local development, setup your KUBECONFIG
+	// cfg.Host = "api.crc.testing:6443"
+	// cfg.TLSClientConfig = rest.TLSClientConfig{Insecure: true}
+
+	cfg.BearerToken = token
+
+	w, err := r.writer(&cfg)
+	if err != nil {
+		log.Printf("wr: %v", w)
+		log.Println(err)
+		return
+	}
+	err = w.Create(context.TODO(), tr)
+	if err != nil {
+		log.Printf("w tr create: %v", tr)
+		log.Println(err)
+		return
+	}
+	if !tr.Status.Authenticated {
+		log.Printf("token unauth: %v", tr.Status)
+		return
+	}
+	user := tr.Status.User
+	extra := map[string]auth2.ExtraValue{}
+	for k, v := range user.Extra {
+		extra[k] = append(
+			auth2.ExtraValue{},
+			v...)
+	}
+	ar := &auth2.SubjectAccessReview{
+		Spec: auth2.SubjectAccessReviewSpec{
+			ResourceAttributes: &auth2.ResourceAttributes{
+				Group:     "*",
+				Resource:  "*",
+				Namespace: "*",
+				Name:      "",
+				Verb:      "*",
+			},
+			Extra:  extra,
+			Groups: user.Groups,
+			User:   user.Username,
+			UID:    user.UID,
+		},
+	}
+	err = w.Create(context.TODO(), ar)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	allowed = ar.Status.Allowed
+	return
+}
+
+//
+// Extract token.
+func (r *Auth) token(ctx *gin.Context) (token string) {
+	header := ctx.GetHeader("Authorization")
+	fields := strings.Fields(header)
+	if len(fields) == 2 && fields[0] == "Bearer" {
+		token = fields[1]
+	}
+
+	return
+}
+
+//
+// Prune the cache.
+// Evacuate expired tokens.
+func (r *Auth) prune() {
+	for token, t := range r.cache {
+		if time.Since(t) > r.TTL {
+			delete(r.cache, token)
+		}
+	}
+}
+
+//
+// Cache key.
+func (r *Auth) key(token, p string) string {
+	return path.Join(
+		token,
+		p)
+}
+
+//
+// Build API writer.
+func (r *Auth) writer(cfg *rest.Config) (w client.Writer, err error) {
+	if r.Writer != nil {
+		w = r.Writer
+		return
+	}
+
+	w, err = client.New(
+		cfg,
+		client.Options{
+			Scheme: scheme.Scheme,
+		})
+	if err == nil {
+		r.Writer = w
+	}
+
+	return
+}

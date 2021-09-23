@@ -32,6 +32,9 @@ func setupRouter() *gin.Engine {
 		c.String(200, "must-gather-rest-wrapper - for API see https://github.com/konveyor/forklift-must-gather-api#README")
 	})
 
+	// Setup middleware to validate bearer auth tokens against the cluster
+	r.Use(backend.DefaultAuth.Permit)
+
 	r.POST("/must-gather", triggerGathering)
 	r.GET("/must-gather", listGatherings) // good at least during development and testing, real user should know gathering ID
 	r.GET("/must-gather/:id", getGathering)

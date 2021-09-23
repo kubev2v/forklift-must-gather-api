@@ -112,7 +112,7 @@ Checkout [doc](doc/README.md) directory for more information.
 - <del>not needed now: handle async/not-blocking gathering with sane limits (e.g. max 10 simul.gatherings)</del>
 - <del>prepare serving of gathered archive</del>
 - <del>add periodical obsolete data cleanup</del>
-- add ocp auth for gin-gonic if needed
-- use passed admin token from operator to exec must-gather (from operator)
+- <del>add ocp auth for gin-gonic by bearer token</del>
+- <del>not used:use passed admin token from operator to exec must-gather (from operator)</del>
 - <del>basic tests</del>
 - <del>document API usage</del>
