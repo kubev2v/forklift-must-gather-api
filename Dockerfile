@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi8/go-toolset:1.15.14 as builder
 ENV GOPATH=$APP_ROOT
 RUN env
 COPY . .
-RUN go build -o app github.com/konveyor/forklift-must-gather-api/pkg
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o app github.com/konveyor/forklift-must-gather-api/pkg
 
 # OpenShift CLI image (oc)
 FROM registry.redhat.io/openshift4/ose-cli:latest as ocimage
