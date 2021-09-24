@@ -27,7 +27,7 @@ func main() {
 	r := setupRouter()
 
 	// Start HTTP/HTTPS service
-	if configEnvOrDefault("API_TLS_ENABLED", "") == "true" {
+	if configEnvOrDefault("API_TLS_ENABLED", "false") == "true" {
 		r.RunTLS(configEnvOrDefault("PORT", "8443"), configEnvOrDefault("API_TLS_CERTIFICATE", ""), configEnvOrDefault("API_TLS_KEY", ""))
 	} else {
 		r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080

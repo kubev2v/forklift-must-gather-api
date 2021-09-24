@@ -97,8 +97,11 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 		panic(err.Error())
 	}
 
-	// Set bearer token captured from API request
+	// Reset bearer token to the one captured from API request
+	cfg.BearerTokenFile = ""
 	cfg.BearerToken = token
+
+	log.Printf("DEBUG - incluster config: %v", cfg)
 
 	// Call cluster API
 	w, err := r.writer(cfg)
