@@ -25,8 +25,9 @@ LABEL name="konveyor/forklift-must-gather-api" \
       io.openshift.expose-services="" \
       io.openshift.tags="operator,konveyor,forklift"
 
-COPY --from=builder /opt/app-root/src/app /usr/bin/must-gather-api
+RUN microdnf -y install findutils && microdnf clean all
 
+COPY --from=builder /opt/app-root/src/app /usr/bin/must-gather-api
 COPY --from=ocimage /usr/bin/oc /usr/bin/oc
 
 ENTRYPOINT ["/usr/bin/must-gather-api"]

@@ -101,8 +101,6 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 	cfg.BearerTokenFile = ""
 	cfg.BearerToken = token
 
-	log.Printf("DEBUG - incluster config: %v", cfg)
-
 	// Call cluster API
 	w, err := r.writer(cfg)
 	if err != nil {
