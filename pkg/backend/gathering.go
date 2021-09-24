@@ -24,38 +24,38 @@ func MustGatherExec(gathering *Gathering, db *gorm.DB, archiveFilename string) {
 		log.Fatal(err)
 	}
 
-	// Prepare must-gather command for execution
-	cmd := exec.Command("oc")
-
-	// Minimal set of args
-	args := []string{"oc", "login", "--token", gathering.AuthToken, "&&", "oc", "adm", "must-gather", "--dest-dir", dest_directory}
+	// oc adm must-gather command args
+	// TODO: "--certificate-authority", "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt" doesnt result to trusted connection, using skip for now
+	args := []string{fmt.Sprintf("export KUBECONFIG=%s/kubeconfig", dest_directory), "&&", "oc", "login", fmt.Sprintf("%s:%s", ConfigEnvOrDefault("KUBERNETES_SERVICE_HOST", "localhost"), ConfigEnvOrDefault("KUBERNETES_SERVICE_PORT", "6443")), "--insecure-skip-tls-verify=true", "--token", sanitizeArg(gathering.AuthToken), "&&", "oc", "adm", "must-gather", "--dest-dir", dest_directory}
 
 	// Expand args for given options (a shared function would need use reflection or marshaling which didn't look to be reasonable to me)
 	// ? args sanitized to not concat commands like image="quay.io/foo/bar; rm -rf something"
 	if gathering.Image != "" {
-		args = append(args, "--image", gathering.Image)
+		args = append(args, "--image", sanitizeArg(gathering.Image))
 	}
 	if gathering.ImageStream != "" {
-		args = append(args, "--image-stream", gathering.ImageStream)
+		args = append(args, "--image-stream", sanitizeArg(gathering.ImageStream))
 	}
 	if gathering.NodeName != "" {
-		args = append(args, "--node-name", gathering.NodeName)
+		args = append(args, "--node-name", sanitizeArg(gathering.NodeName))
 	}
 	if gathering.SourceDir != "" {
-		args = append(args, "--source-dir", gathering.SourceDir)
+		args = append(args, "--source-dir", sanitizeArg(gathering.SourceDir))
 	}
 	if gathering.Timeout != "" {
-		args = append(args, "--timeout", gathering.Timeout)
+		args = append(args, "--timeout", sanitizeArg(gathering.Timeout))
 	}
 	if gathering.Server != "" {
-		args = append(args, "--server", gathering.Server)
+		args = append(args, "--server", sanitizeArg(gathering.Server))
 	}
 	if gathering.Command != "" {
-		args = append(args, "--", gathering.Command)
+		args = append(args, "--", sanitizeArg(gathering.Command))
 	}
-	//args = append(args, "2>&1") // Reading both stdout&stderr outputs to a single buffer
-	log.Printf("Must-gather execution #%d command args: %v", gathering.ID, args)
-	cmd.Args = args
+	log.Printf("Must-gather execution #%d args: %v", gathering.ID, args)
+
+	// Prepare must-gather command for execution
+	cmd := exec.Command("/bin/sh")
+	cmd.Args = []string{"sh", "-c", strings.Join(args, " ")}
 
 	// Execute the must-gather and capture output
 	stdout, _ := cmd.StdoutPipe()
@@ -106,8 +106,4 @@ func MustGatherExec(gathering *Gathering, db *gorm.DB, archiveFilename string) {
 	}
 	log.Printf("Must-gather execution #%d finished with status: %s", gathering.ID, gathering.Status)
 	db.Save(&gathering)
-}
-
-func gatheringDir(gatheringID uint) string {
-	return fmt.Sprintf("/tmp/must-gather-result-%d", gatheringID)
 }

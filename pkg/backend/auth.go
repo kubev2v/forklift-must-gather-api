@@ -91,15 +91,19 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 		},
 	}
 
-	var cfg rest.Config
-	// K8s sets env variables to determine connection details (like KUBERNETES_PORT)
-	// for local development, setup your KUBECONFIG
-	// cfg.Host = "api.crc.testing:6443"
-	// cfg.TLSClientConfig = rest.TLSClientConfig{Insecure: true}
+	// Get in-cluster config from the pod environment to find cluster API host/port
+	// TODO: add condition to specify cluster API endpoint for local execution instead of KUBERNETES_SERVICE_HOST and SA etc.
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
 
+	// Reset bearer token to the one captured from API request
+	cfg.BearerTokenFile = ""
 	cfg.BearerToken = token
 
-	w, err := r.writer(&cfg)
+	// Call cluster API
+	w, err := r.writer(cfg)
 	if err != nil {
 		log.Printf("Cluster API writer error: %v", w)
 		log.Println(err)
