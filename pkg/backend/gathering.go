@@ -25,7 +25,8 @@ func MustGatherExec(gathering *Gathering, db *gorm.DB, archiveFilename string) {
 	}
 
 	// oc adm must-gather command args
-	args := []string{"oc", "login", fmt.Sprintf("%s:%s", ConfigEnvOrDefault("KUBERNETES_SERVICE_HOST", "localhost"), ConfigEnvOrDefault("KUBERNETES_SERVICE_PORT", "6443")), "--certificate-authority", "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt", "--token", sanitizeArg(gathering.AuthToken), "&&", "oc", "adm", "must-gather", "--dest-dir", dest_directory}
+	// TODO: "--certificate-authority", "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt" doesnt result to trusted connection, using skip for now
+	args := []string{fmt.Sprintf("export KUBECONFIG=%s/kubeconfig", dest_directory), "&&", "oc", "login", fmt.Sprintf("%s:%s", ConfigEnvOrDefault("KUBERNETES_SERVICE_HOST", "localhost"), ConfigEnvOrDefault("KUBERNETES_SERVICE_PORT", "6443")), "--insecure-skip-tls-verify=true", "--token", sanitizeArg(gathering.AuthToken), "&&", "oc", "adm", "must-gather", "--dest-dir", dest_directory}
 
 	// Expand args for given options (a shared function would need use reflection or marshaling which didn't look to be reasonable to me)
 	// ? args sanitized to not concat commands like image="quay.io/foo/bar; rm -rf something"
