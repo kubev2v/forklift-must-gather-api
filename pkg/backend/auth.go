@@ -92,6 +92,7 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 	}
 
 	// Get in-cluster config from the pod environment to find cluster API host/port
+	// TODO: add condition to specify cluster API endpoint for local execution instead of KUBERNETES_SERVICE_HOST and SA etc.
 	cfg, err := rest.InClusterConfig()
 	if err != nil {
 		panic(err.Error())

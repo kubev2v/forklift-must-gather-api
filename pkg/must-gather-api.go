@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -18,23 +17,28 @@ var db *gorm.DB
 var corsAllowedOrigins []*regexp.Regexp
 
 func main() {
-	db = backend.ConnectDB(configEnvOrDefault("DB_PATH", "gatherings.db"))
+	db = backend.ConnectDB(backend.ConfigEnvOrDefault("DB_PATH", "gatherings.db"))
 
 	// Periodical deletion of old records&archives on background
-	go backend.PeriodicalCleanup(configEnvOrDefault("CLEANUP_MAX_AGE", "-1"), db, false)
+	go backend.PeriodicalCleanup(backend.ConfigEnvOrDefault("CLEANUP_MAX_AGE", "-1"), db, false)
 
 	// Prepare gin-gonic webserver with routes and middleware
 	r := setupRouter()
 
 	// Start HTTP/HTTPS service
-	if configEnvOrDefault("API_TLS_ENABLED", "false") == "true" {
-		r.RunTLS(configEnvOrDefault("PORT", "8443"), configEnvOrDefault("API_TLS_CERTIFICATE", ""), configEnvOrDefault("API_TLS_KEY", ""))
+	if backend.ConfigEnvOrDefault("API_TLS_ENABLED", "false") == "true" {
+		r.RunTLS(backend.ConfigEnvOrDefault("PORT", "8443"), backend.ConfigEnvOrDefault("API_TLS_CERTIFICATE", ""), backend.ConfigEnvOrDefault("API_TLS_KEY", ""))
 	} else {
 		r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080
 	}
 }
 
 func setupRouter() *gin.Engine {
+	// Set gin release mode if runs in the k8s cluster
+	if len(backend.ConfigEnvOrDefault("KUBERNETES_SERVICE_HOST", "")) > 0 {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	// Gin setup
 	r = gin.Default()
 
@@ -68,16 +72,16 @@ func triggerGathering(c *gin.Context) {
 	if err := c.Bind(&gathering); err == nil {
 		gathering.Status = "new"
 		if gathering.Image == "" {
-			gathering.Image = configEnvOrDefault("DEFAULT_IMAGE", "quay.io/konveyor/forklift-must-gather") // default image configurable via OS ENV vars
+			gathering.Image = backend.ConfigEnvOrDefault("DEFAULT_IMAGE", "quay.io/konveyor/forklift-must-gather") // default image configurable via OS ENV vars
 		}
 		if gathering.Timeout == "" {
-			gathering.Timeout = configEnvOrDefault("TIMEOUT", "20m") // default timeout for must-gather execution
+			gathering.Timeout = backend.ConfigEnvOrDefault("TIMEOUT", "20m") // default timeout for must-gather execution
 		}
 		gathering.AuthToken = strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
 		// TODO: Check the token or just pass to the commandline? but always satinize to not explode token to multiple commands (steal previous executions data or tokens)
 		db.Create(&gathering)
 		c.JSON(201, gathering)
-		go backend.MustGatherExec(&gathering, db, configEnvOrDefault("ARCHIVE_FILENAME", "must-gather.tar.gz"))
+		go backend.MustGatherExec(&gathering, db, backend.ConfigEnvOrDefault("ARCHIVE_FILENAME", "must-gather.tar.gz"))
 	} else {
 		log.Printf("Error creating gathering: %v", err)
 		c.JSON(400, "create gathering error")
@@ -117,17 +121,6 @@ func getGatheringArchive(c *gin.Context) {
 	}
 }
 
-func configEnvOrDefault(name, defaultValue string) string {
-	value, present := os.LookupEnv(name)
-	if present {
-		log.Printf("Config option %s set from environment variable to: %s", name, value)
-		return value
-	} else {
-		log.Printf("Environment variable %s is undefined, using default: %s", name, defaultValue)
-		return defaultValue
-	}
-}
-
 // CORS functions
 func corsAllow(origin string) bool {
 	for _, expr := range corsAllowedOrigins {
@@ -141,7 +134,7 @@ func corsAllow(origin string) bool {
 
 //func corsBuildOrigins() {
 //	corsAllowedOrigins = []*regexp.Regexp{}
-//	for _, r := range configEnvOrDefault("CORS_ALLOWED_ORIGINS", "") {
+//	for _, r := range ConfigEnvOrDefault("CORS_ALLOWED_ORIGINS", "") {
 //		expr, err := regexp.Compile(r)
 //		if err != nil {
 //			continue
