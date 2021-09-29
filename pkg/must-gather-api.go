@@ -26,16 +26,21 @@ func main() {
 	r := setupRouter()
 
 	// Start HTTP/HTTPS service
+	var err error
 	if backend.ConfigEnvOrDefault("API_TLS_ENABLED", "false") == "true" {
-		r.RunTLS(backend.ConfigEnvOrDefault("PORT", "8443"), backend.ConfigEnvOrDefault("API_TLS_CERTIFICATE", ""), backend.ConfigEnvOrDefault("API_TLS_KEY", ""))
+		err = r.RunTLS(backend.ConfigEnvOrDefault("PORT", "8443"), backend.ConfigEnvOrDefault("API_TLS_CERTIFICATE", ""), backend.ConfigEnvOrDefault("API_TLS_KEY", ""))
 	} else {
-		r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080
+		err = r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080
+	}
+
+	if err != nil {
+		log.Panicf("Error - failed to start API server: %v", err)
 	}
 }
 
 func setupRouter() *gin.Engine {
 	// Set gin release mode if runs in the k8s cluster
-	if len(backend.ConfigEnvOrDefault("KUBERNETES_SERVICE_HOST", "")) > 0 {
+	if len(backend.ConfigEnvOrDefault("KUBERNETES_SERVICE_HOST", "")) > 0 && backend.ConfigEnvOrDefault("DEBUG", "") != "" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -43,7 +48,7 @@ func setupRouter() *gin.Engine {
 	r = gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
-		c.String(200, "must-gather-rest-wrapper - for API see https://github.com/konveyor/forklift-must-gather-api#README")
+		c.String(200, "must-gather-api - for API see https://github.com/konveyor/forklift-must-gather-api#README")
 	})
 
 	// Setup middleware to validate bearer auth tokens against the cluster
@@ -78,7 +83,6 @@ func triggerGathering(c *gin.Context) {
 			gathering.Timeout = backend.ConfigEnvOrDefault("TIMEOUT", "20m") // default timeout for must-gather execution
 		}
 		gathering.AuthToken = strings.TrimPrefix(c.Request.Header.Get("Authorization"), "Bearer ")
-		// TODO: Check the token or just pass to the commandline? but always satinize to not explode token to multiple commands (steal previous executions data or tokens)
 		db.Create(&gathering)
 		c.JSON(201, gathering)
 		go backend.MustGatherExec(&gathering, db, backend.ConfigEnvOrDefault("ARCHIVE_FILENAME", "must-gather.tar.gz"))
@@ -88,7 +92,6 @@ func triggerGathering(c *gin.Context) {
 	}
 }
 
-// TODO filter results by authtoken
 func listGatherings(c *gin.Context) {
 	var Gatherings []backend.Gathering
 	db.Find(&Gatherings)
