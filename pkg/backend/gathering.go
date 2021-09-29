@@ -51,7 +51,13 @@ func MustGatherExec(gathering *Gathering, db *gorm.DB, archiveFilename string) {
 	if gathering.Command != "" {
 		args = append(args, "--", sanitizeArg(gathering.Command))
 	}
-	log.Printf("Must-gather execution #%d args: %v", gathering.ID, args)
+
+	// Log all oc args only in debug mode
+	if ConfigEnvOrDefault("DEBUG", "") == "" {
+		log.Printf("Must-gather execution #%d with image: %s and custom-command: %s..", gathering.ID, gathering.Image, gathering.Command)
+	} else {
+		log.Printf("Must-gather execution #%d args: %v", gathering.ID, args)
+	}
 
 	// Prepare must-gather command for execution
 	cmd := exec.Command("/bin/sh")
