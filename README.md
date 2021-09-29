@@ -4,14 +4,12 @@ This repo provides HTTP API to allow trigger OpenShift must-gather (full or targ
 
 ## Usage
 
-This is an early development version, steps below might change.
-
 ### Get it and run
 
 ```
 $ go get github.com/konveyor/forklift-must-gather-api
 $ cd ~/go/src/github.com/konveyor/forklift-must-gather-api
-$ go run pkg/must-gather-api.go # Note, run oc login first to allow wrapper use your KUBECONFIG or set environment variables to adjust config options
+$ go run pkg/must-gather-api.go
 ```
 
 ### API examples
@@ -79,7 +77,7 @@ All params are optional. Empty POST request will run must-gather with default op
 
 ### Authentication
 
-It is required to pass a Bearer token in Authorization HTTP header, e.g. ```Authorization: Bearer sha256~ML7q_m_kjOzfk...```).
+For interaction with the API it is needed to be a cluster-admin. It is required to pass a Bearer token in Authorization HTTP header, e.g. ```Authorization: Bearer sha256~ML7q_m_kjOzfk...```).
 
 The token can be printed in command line by ```$ oc whoami -t``` command or captured from HTTP headers in OpenShift web UI requests.
 
