@@ -28,7 +28,9 @@ func main() {
 	// Start HTTP/HTTPS service
 	var err error
 	if backend.ConfigEnvOrDefault("API_TLS_ENABLED", "false") == "true" {
-		err = r.RunTLS(backend.ConfigEnvOrDefault("PORT", "8443"), backend.ConfigEnvOrDefault("API_TLS_CERTIFICATE", ""), backend.ConfigEnvOrDefault("API_TLS_KEY", ""))
+		// gin-gonic TLS doesn't call resolveAddress so it is needed ensure PORT gets to an Address
+		tlsAddress := prepareAddr(backend.ConfigEnvOrDefault("PORT", "8443"))
+		err = r.RunTLS(tlsAddress, backend.ConfigEnvOrDefault("API_TLS_CERTIFICATE", ""), backend.ConfigEnvOrDefault("API_TLS_KEY", ""))
 	} else {
 		err = r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080
 	}
@@ -122,6 +124,16 @@ func getGatheringArchive(c *gin.Context) {
 	} else {
 		c.String(404, "")
 	}
+}
+
+func prepareAddr(port string) string {
+	var addr string
+	if strings.Contains(port, ":") {
+		addr = port
+	} else {
+		addr = ":" + port
+	}
+	return addr
 }
 
 // CORS functions
