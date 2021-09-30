@@ -105,7 +105,7 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 	// Call cluster API
 	w, err := r.writer(cfg)
 	if err != nil {
-		log.Printf("Cluster API writer error: %v", w)
+		log.Printf("Cluster API writer error: %v", err)
 		log.Println(err)
 		return
 	}
