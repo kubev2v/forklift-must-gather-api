@@ -54,15 +54,6 @@ func setupRouter() *gin.Engine {
 	// Setup middleware to validate bearer auth tokens against the cluster
 	r.Use(backend.DefaultAuth.Permit)
 
-	// Prepare CORS
-	//r.Use(cors.New(cors.Config{
-	//	AllowMethods:     []string{"GET", "POST"},
-	//	AllowHeaders:     []string{"Authorization", "Origin"},
-	//	AllowOriginFunc:  corsAllow,
-	//	AllowCredentials: true,
-	//	MaxAge:           12 * time.Hour,
-	//}))
-
 	// Setup routes for must-gather functions
 	r.POST("/must-gather", triggerGathering)
 	r.GET("/must-gather", listGatherings) // good at least during development and testing, real user should know gathering ID
@@ -133,25 +124,3 @@ func prepareAddr(port string) string {
 	}
 	return addr
 }
-
-// CORS functions
-//func corsAllow(origin string) bool {
-//	for _, expr := range corsAllowedOrigins {
-//		if expr.MatchString(origin) {
-//			return true
-//		}
-//	}
-//
-//	return false
-//}
-
-//func corsBuildOrigins() {
-//	corsAllowedOrigins = []*regexp.Regexp{}
-//	for _, r := range ConfigEnvOrDefault("CORS_ALLOWED_ORIGINS", "") {
-//		expr, err := regexp.Compile(r)
-//		if err != nil {
-//			continue
-//		}
-//		corsAllowedOrigins = append(corsAllowedOrigins, expr)
-//	}
-//}
