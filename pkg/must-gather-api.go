@@ -4,9 +4,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/konveyor/forklift-must-gather-api/pkg/backend"
 	"gorm.io/gorm"
@@ -50,20 +48,20 @@ func setupRouter() *gin.Engine {
 	r = gin.Default()
 
 	r.GET("/", func(c *gin.Context) {
-		c.String(200, "must-gather-api - for API see https://github.com/konveyor/forklift-must-gather-api#README")
+		c.String(200, "must-gather-api - for API see https://github.com/konveyor/forklift-must-gather-api#README no cors")
 	})
 
 	// Setup middleware to validate bearer auth tokens against the cluster
 	r.Use(backend.DefaultAuth.Permit)
 
 	// Prepare CORS
-	r.Use(cors.New(cors.Config{
-		AllowMethods:     []string{"GET", "POST"},
-		AllowHeaders:     []string{"Authorization", "Origin"},
-		AllowOriginFunc:  corsAllow,
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
+	//r.Use(cors.New(cors.Config{
+	//	AllowMethods:     []string{"GET", "POST"},
+	//	AllowHeaders:     []string{"Authorization", "Origin"},
+	//	AllowOriginFunc:  corsAllow,
+	//	AllowCredentials: true,
+	//	MaxAge:           12 * time.Hour,
+	//}))
 
 	// Setup routes for must-gather functions
 	r.POST("/must-gather", triggerGathering)
@@ -137,15 +135,15 @@ func prepareAddr(port string) string {
 }
 
 // CORS functions
-func corsAllow(origin string) bool {
-	for _, expr := range corsAllowedOrigins {
-		if expr.MatchString(origin) {
-			return true
-		}
-	}
-
-	return false
-}
+//func corsAllow(origin string) bool {
+//	for _, expr := range corsAllowedOrigins {
+//		if expr.MatchString(origin) {
+//			return true
+//		}
+//	}
+//
+//	return false
+//}
 
 //func corsBuildOrigins() {
 //	corsAllowedOrigins = []*regexp.Regexp{}
