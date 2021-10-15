@@ -57,6 +57,7 @@ func (r *Auth) Permit(ctx *gin.Context) {
 	key := r.key(token, p)
 	if t, found := r.cache[key]; found {
 		if time.Since(t) <= r.TTL {
+			log.Println("Authorization check - allowed from cache.")
 			return
 		}
 	}
@@ -105,12 +106,13 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 	// Call cluster API
 	w, err := r.writer(cfg)
 	if err != nil {
-		log.Printf("Cluster API writer error: %v", w)
+		log.Printf("Error: cluster API writer %v", w)
 		log.Println(err)
 		return
 	}
 	err = w.Create(context.TODO(), tr)
 	if err != nil {
+		log.Printf("Error: create token review %v", tr)
 		log.Println(err)
 		return
 	}
@@ -142,6 +144,7 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 	}
 	err = w.Create(context.TODO(), ar)
 	if err != nil {
+		log.Printf("Error: create SubjectAccessReview %v", ar)
 		log.Println(err)
 		return
 	}
