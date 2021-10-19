@@ -187,11 +187,6 @@ func (r *Auth) key(token, p string) string {
 //
 // Build API writer.
 func (r *Auth) writer(cfg *rest.Config) (w client.Writer, err error) {
-	if r.Writer != nil {
-		w = r.Writer
-		return
-	}
-
 	w, err = client.New(
 		cfg,
 		client.Options{
