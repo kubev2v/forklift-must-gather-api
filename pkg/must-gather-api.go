@@ -68,7 +68,7 @@ func triggerGathering(c *gin.Context) {
 	if err := c.Bind(&gathering); err == nil {
 		gathering.Status = "new"
 		if gathering.Image == "" {
-			gathering.Image = backend.ConfigEnvOrDefault("DEFAULT_IMAGE", "quay.io/konveyor/forklift-must-gather") // default image configurable via OS ENV vars
+			gathering.Image = backend.ConfigEnvOrDefault("MUST_GATHER_IMAGE", "quay.io/konveyor/forklift-must-gather") // default image configurable via OS ENV vars
 		}
 		if gathering.Timeout == "" {
 			gathering.Timeout = backend.ConfigEnvOrDefault("TIMEOUT", "20m") // default timeout for must-gather execution
