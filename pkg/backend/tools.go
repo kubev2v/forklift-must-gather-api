@@ -14,7 +14,7 @@ func gatheringDir(gatheringID uint) string {
 // TODO: Consider make or use something nicer
 func sanitizeArg(str string) string {
 	output := ""
-	allowedChars := "QWERTZUIOPASDFGHJKLYXCVBNMqwertzuiopasdfghjklyxcvbnm1234567890_-~/:.= "
+	allowedChars := "QWERTZUIOPASDFGHJKLYXCVBNMqwertzuiopasdfghjklyxcvbnm1234567890_-~/:.=@ "
 	for _, rune := range str {
 		if strings.ContainsRune(allowedChars, rune) {
 			output += string(rune)
