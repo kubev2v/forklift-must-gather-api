@@ -1,5 +1,7 @@
 # Forklift must-gather API service
 
+[![Must-gather API Repository on Quay](https://quay.io/repository/konveyor/forklift-must-gather-api/status "Must-gather API Repository on Quay")](https://quay.io/repository/konveyor/forklift-must-gather-api) [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/konveyor/forklift-must-gather-api/pulls)
+
 This repo provides HTTP API to allow trigger OpenShift must-gather (full or targeted) and provide output archive again via HTTP.
 
 ## Usage
