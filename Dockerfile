@@ -1,12 +1,12 @@
 # Builder image
-FROM registry.access.redhat.com/ubi8/go-toolset:1.15.14 as builder
+FROM registry.access.redhat.com/ubi8/go-toolset:1.16.12 as builder
 ENV GOPATH=$APP_ROOT
 RUN env
 COPY . .
 RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o app github.com/konveyor/forklift-must-gather-api/pkg
 
 # OpenShift CLI image (oc)
-FROM quay.io/openshift/origin-cli:4.8 as ocimage
+FROM quay.io/openshift/origin-cli:4.10 as ocimage
 
 # Runner image
 FROM registry.access.redhat.com/ubi8-minimal
