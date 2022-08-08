@@ -4,7 +4,9 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -13,6 +15,8 @@ import (
 	auth "k8s.io/api/authentication/v1"
 	auth2 "k8s.io/api/authorization/v1"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"k8s.io/kubectl/pkg/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -86,17 +90,32 @@ func (r *Auth) Permit(ctx *gin.Context) {
 //
 // Authenticate token for a custer admin which is required by oc adm must-gather
 func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
+	var cfg *rest.Config
+
 	tr := &auth.TokenReview{
 		Spec: auth.TokenReviewSpec{
 			Token: token,
 		},
 	}
 
-	// Get in-cluster config from the pod environment to find cluster API host/port
-	// TODO: add condition to specify cluster API endpoint for local execution instead of KUBERNETES_SERVICE_HOST and SA etc.
-	cfg, err := rest.InClusterConfig()
-	if err != nil {
-		panic(err.Error())
+	if os.Getenv("USE_KUBECONFIG") == "true" {
+		// Get cluster API endpoint for local execution
+		// using kubeconfig file
+		kubeconfig := os.Getenv("KUBECONFIG")
+		if len(kubeconfig) == 0 {
+			kubeconfig = filepath.Join(homedir.HomeDir(), ".kube", "config")
+		}
+
+		cfg, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		// Get in-cluster config from the pod environment to find cluster API host/port
+		cfg, err = rest.InClusterConfig()
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 
 	// Reset bearer token to the one captured from API request

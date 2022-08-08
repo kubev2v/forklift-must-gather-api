@@ -96,6 +96,7 @@ TIMEOUT | ```20m``` | Timeout for must-gather execution
 ARCHIVE_FILENAME | ```must-gather.tar.gz``` | Archive filename to be searched in must-gather execution directory to be provided to user as the result archive
 CLEANUP_MAX_AGE | ```-1``` | Maximum age of must-gather executions kept available in the wrapper, -1 disables the deletion, e.g. ```24h```
 DEBUG | ```(not set)``` | Set to enable debugging output when running in cluster, e.g. ```true```
+USE_KUBECONFIG | ```(not set)``` | Set to enable using local ```kubeconfig``` file, e.g. ```true```
 
 ## Notes
 
