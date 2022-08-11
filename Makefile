@@ -18,7 +18,7 @@ manager: fmt vet
 
 # Run against the configured Kubernetes cluster in ~/.kube/config
 run: fmt vet
-	go run ./pkg/must-gather-rest-wrapper.go
+	go run ./pkg/must-gather-api.go
 
 # Run go fmt against code
 fmt:
