@@ -1,5 +1,5 @@
 # Image URL to use all building/pushing image targets
-IMG ?= quay.io/konveyor/forklift-must-gather-api:latest
+IMG ?= quay.io/kubev2v/forklift-must-gather-api:latest
 GOOS ?= `go env GOOS`
 GOBIN ?= ${GOPATH}/bin
 GO111MODULE = auto

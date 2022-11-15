@@ -1,6 +1,6 @@
 # Forklift must-gather API service
 
-[![Must-gather API Repository on Quay](https://quay.io/repository/konveyor/forklift-must-gather-api/status "Must-gather API Repository on Quay")](https://quay.io/repository/konveyor/forklift-must-gather-api) [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/konveyor/forklift-must-gather-api/pulls)
+[![Must-gather API Repository on Quay](https://quay.io/repository/kubev2v/forklift-must-gather-api/status "Must-gather API Repository on Quay")](https://quay.io/repository/kubev2v/forklift-must-gather-api) [![License](http://img.shields.io/:license-apache-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/kubev2v/forklift-must-gather-api/pulls)
 
 This repo provides HTTP API to allow trigger OpenShift must-gather (full or targeted) and provide output archive again via HTTP.
 
@@ -9,8 +9,8 @@ This repo provides HTTP API to allow trigger OpenShift must-gather (full or targ
 ### Get it and run
 
 ```
-$ go get github.com/konveyor/forklift-must-gather-api
-$ cd ~/go/src/github.com/konveyor/forklift-must-gather-api
+$ go get github.com/kubev2v/forklift-must-gather-api
+$ cd ~/go/src/github.com/kubev2v/forklift-must-gather-api
 $ go run pkg/must-gather-api.go
 ```
 
@@ -19,7 +19,7 @@ $ go run pkg/must-gather-api.go
 Start must-gather execution
 
 ```
-$ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"image": "quay.io/konveyor/forklift-must-gather", "timeout": "15m"}' http://localhost:8080/must-gather
+$ curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <TOKEN>" -d '{"image": "quay.io/kubev2v/forklift-must-gather", "timeout": "15m"}' http://localhost:8080/must-gather
 ```
 
 Get must-gather execution (status field values: new, inprogress, completed, error)
@@ -48,7 +48,7 @@ Example of must-gather JSON object returned by API
   "updated-at": "2021-06-30T15:23:05.415732774+02:00",
   "custom-name": "",
   "status": "completed",
-  "image": "quay.io/konveyor/forklift-must-gather",
+  "image": "quay.io/kubev2v/forklift-must-gather",
   "image-stream": "",
   "node-name": "",
   "command": "",
@@ -91,7 +91,7 @@ Option | Default value | Description
 --- | --- | ---
 PORT | ```8080``` | Port where the wrapper listens on
 DB_PATH | ```./gatherings.db``` | Local storage for must-gather executions records, can be ephemeral or just in memory ```file::memory:?cache=shared```
-MUST_GATHER_IMAGE | ```quay.io/konveyor/forklift-must-gather``` | Image name to be used if it was not specified in API call
+MUST_GATHER_IMAGE | ```quay.io/kubev2v/forklift-must-gather``` | Image name to be used if it was not specified in API call
 TIMEOUT | ```20m``` | Timeout for must-gather execution
 ARCHIVE_FILENAME | ```must-gather.tar.gz``` | Archive filename to be searched in must-gather execution directory to be provided to user as the result archive
 CLEANUP_MAX_AGE | ```-1``` | Maximum age of must-gather executions kept available in the wrapper, -1 disables the deletion, e.g. ```24h```
