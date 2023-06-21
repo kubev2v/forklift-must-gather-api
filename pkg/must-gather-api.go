@@ -23,15 +23,10 @@ func main() {
 	// Prepare gin-gonic webserver with routes and middleware
 	r := setupRouter()
 
-	// Start HTTP/HTTPS service
-	var err error
-	if backend.ConfigEnvOrDefault("API_TLS_ENABLED", "false") == "true" {
-		// gin-gonic TLS doesn't call resolveAddress so it is needed ensure PORT gets to an Address
-		tlsAddress := prepareAddr(backend.ConfigEnvOrDefault("PORT", "8443"))
-		err = r.RunTLS(tlsAddress, backend.ConfigEnvOrDefault("API_TLS_CERTIFICATE", ""), backend.ConfigEnvOrDefault("API_TLS_KEY", ""))
-	} else {
-		err = r.Run() // PORT from ENV variable is handled inside Gin-gonic and defaults to 8080
-	}
+	// Start HTTPS service
+	// gin-gonic TLS doesn't call resolveAddress so it is needed ensure PORT gets to an Address
+	tlsAddress := prepareAddr(backend.ConfigEnvOrDefault("PORT", "8443"))
+	err := r.RunTLS(tlsAddress, backend.ConfigEnvOrDefault("API_TLS_CERTIFICATE", ""), backend.ConfigEnvOrDefault("API_TLS_KEY", ""))
 
 	if err != nil {
 		log.Panicf("Error - failed to start API server: %v", err)
