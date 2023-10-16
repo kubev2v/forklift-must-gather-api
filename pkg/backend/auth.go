@@ -21,13 +21,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-//
 // Default auth provider.
 var DefaultAuth = Auth{
 	TTL: time.Second * 10,
 }
 
-//
 // Authorized by k8s bearer token SAR.
 // Token must have "*" on the cluster, like cluster-admin
 type Auth struct {
@@ -41,7 +39,6 @@ type Auth struct {
 	cache map[string]time.Time
 }
 
-//
 // Authenticate token.
 func (r *Auth) Permit(ctx *gin.Context) {
 	p := "must-gather"
@@ -87,7 +84,6 @@ func (r *Auth) Permit(ctx *gin.Context) {
 	}
 }
 
-//
 // Authenticate token for a custer admin which is required by oc adm must-gather
 func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 	var cfg *rest.Config
@@ -172,7 +168,6 @@ func (r *Auth) permitClusterAdmin(token string) (allowed bool, err error) {
 	return
 }
 
-//
 // Extract token.
 func (r *Auth) token(ctx *gin.Context) (token string) {
 	header := ctx.GetHeader("Authorization")
@@ -184,7 +179,6 @@ func (r *Auth) token(ctx *gin.Context) (token string) {
 	return
 }
 
-//
 // Prune the cache.
 // Evacuate expired tokens.
 func (r *Auth) prune() {
@@ -195,7 +189,6 @@ func (r *Auth) prune() {
 	}
 }
 
-//
 // Cache key.
 func (r *Auth) key(token, p string) string {
 	return path.Join(
@@ -203,7 +196,6 @@ func (r *Auth) key(token, p string) string {
 		p)
 }
 
-//
 // Build API writer.
 func (r *Auth) writer(cfg *rest.Config) (w client.Writer, err error) {
 	w, err = client.New(

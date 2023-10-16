@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/konveyor/forklift-must-gather-api/pkg/backend"
 	"gorm.io/gorm"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var r *gin.Engine
@@ -15,6 +17,9 @@ var db *gorm.DB
 var corsAllowedOrigins []*regexp.Regexp
 
 func main() {
+	// This line prevents controller-runtime from complaining about log.SetLogger never being called
+	logf.SetLogger(zap.New())
+
 	db = backend.ConnectDB(backend.ConfigEnvOrDefault("DB_PATH", "gatherings.db"))
 
 	// Periodical deletion of old records&archives on background
